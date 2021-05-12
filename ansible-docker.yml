@@ -1,0 +1,62 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+  - name: update repo (ubuntu)
+    tags: always
+    apt: update_cache=yes
+    changed_when: false
+    when: ansible_distribution == 'Ubuntu'
+  - name: update repo (Centos)
+    tags: always
+    yum: update_cache=yes
+    changed_when: false
+    when: ansible_distribution == 'CentOS'
+
+- hosts: all
+  become: true
+  tasks:
+  - name: install dependencies 'Ubuntu'
+    tags: ubuntu, dependencies
+    package:
+      name:  "{{ item }}"
+      state: present
+    loop:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - gnupg 
+      - lsb-release
+    when: ansible_distribution == 'Ubuntu'
+  - name: install dependencies 'CentOS'
+    tags: centos, dependencies
+    package:
+      name:  "{{ item }}"
+      state: present
+    loop:
+      - yum-utils
+    when: ansible_distribution == 'CentOS'
+  
+  - name: Add Docker GPG apt Key 'Ubuntu'
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+    when: ansible_distribution == 'Ubuntu'
+  - name: Save the current Ubuntu release version into a variable
+    tags: docker
+    shell: lsb_release -cs
+    register: ubuntu_version
+    when: ansible_distribution == 'Ubuntu'
+  - name: Add repo 'Ubuntu'
+    tags: docker
+    apt_repository:
+      repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ubuntu_version }} stable"
+      state: present 
+      update_cache: true
+    when: ansible_distribution == 'Ubuntu'
+  - name: Add Docker repo 'CentOS'
+    get_url:
+      url: https://download.docker.com/linux/centos/docker-ce.repo
+      dest: /etc/yum.repos.d/docker-ce.repo
+    when: ansible_distribution == 'CentOS'
