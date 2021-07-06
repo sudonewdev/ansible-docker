@@ -1,14 +1,2 @@
 [all]
-server01 ansible_host=192.168.1.165 ansible_user=simone
-server02 ansible_host=192.168.1.181 ansible_user=simone
-server03 ansible_host=192.168.1.168 ansible_user=simone
-
-[web_servers]
-server01
-server03
-
-[db_servers]
-server02
-
-[file_servers]
-server03
+server01 ansible_host=192.168.1.10 ansible_user=james
